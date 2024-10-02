@@ -1,1 +1,5 @@
-from visa_approval.logger import logging
+
+from visa_approval.pipline.training_pipeline import TrainPipeline
+
+obj = TrainPipeline()
+obj.run_pipeline()
