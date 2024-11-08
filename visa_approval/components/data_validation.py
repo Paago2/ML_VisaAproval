@@ -81,34 +81,47 @@ class DataValidation:
         except Exception as e:
             raise VisaApprovalException(e, sys)
 
-    def detect_dataset_drift(self, reference_df: DataFrame, current_df: DataFrame, ) -> bool:
+    def detect_dataset_drift(self, reference_df: DataFrame, current_df: DataFrame) -> bool:
         """
         Method Name :   detect_dataset_drift
         Description :   This method validates if drift is detected
-        
+
         Output      :   Returns bool value based on validation results
         On Failure  :   Write an exception log and then raise an exception
         """
         try:
+            # Create the data drift report using Evidently's DatasetDriftMetric
             data_drift_report = Report(metrics=[DatasetDriftMetric()])
 
-
+            # Run the drift detection process
             data_drift_report.run(reference_data=reference_df, current_data=current_df)
 
-
+            # Extract the report as JSON
             report = data_drift_report.json()
             json_report = json.loads(report)
 
+            # Write the drift report to a YAML file
             write_yaml_file(file_path=self.data_validation_config.drift_report_file_path, content=json_report)
 
-            n_features = json_report["data_drift"]["data"]["metrics"]["n_features"]
-            n_drifted_features = json_report["data_drift"]["data"]["metrics"]["n_drifted_features"]
+            # Check if 'data_drift' exists in the json_report before accessing its metrics
+            if "data_drift" in json_report:
+                n_features = json_report["data_drift"]["data"]["metrics"]["n_features"]
+                n_drifted_features = json_report["data_drift"]["data"]["metrics"]["n_drifted_features"]
+                drift_status = json_report["data_drift"]["data"]["metrics"]["dataset_drift"]
 
-            logging.info(f"{n_drifted_features}/{n_features} drift detected.")
-            drift_status = json_report["data_drift"]["data"]["metrics"]["dataset_drift"]
+                logging.info(f"{n_drifted_features}/{n_features} features show drift.")
+            else:
+                logging.warning("'data_drift' key is missing from the drift report. No drift detected.")
+                n_features = 0
+                n_drifted_features = 0
+                drift_status = False
+
             return drift_status
+
         except Exception as e:
+            # Log and raise a custom exception if any error occurs
             raise VisaApprovalException(e, sys) from e
+
 
     def initiate_data_validation(self) -> DataValidationArtifact:
         """

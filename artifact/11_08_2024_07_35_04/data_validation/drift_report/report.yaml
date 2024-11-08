@@ -1,0 +1,10 @@
+metrics:
+- metric: DatasetDriftMetric
+  result:
+    dataset_drift: false
+    drift_share: 0.5
+    number_of_columns: 12
+    number_of_drifted_columns: 1
+    share_of_drifted_columns: 0.08333333333333333
+timestamp: '2024-11-08 07:35:25.477174'
+version: 0.4.38
